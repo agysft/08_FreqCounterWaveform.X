@@ -5,32 +5,32 @@
          <string>class com.microchip.mcc.mcu16.systemManager.DefaultSystemManagerMcu16</string>
       </entry>
       <entry>
-         <string>Main Manager</string>
-         <string>class com.microchip.mcc.mcu16.mainManager.MainManager</string>
-      </entry>
-      <entry>
          <string>JTAG</string>
          <string>class com.microchip.mcc.mcu16.systemManager.jtag.JTAG</string>
+      </entry>
+      <entry>
+         <string>Main Manager</string>
+         <string>class com.microchip.mcc.mcu16.mainManager.MainManager</string>
       </entry>
       <entry>
          <string>INTERNAL OSCILLATOR</string>
          <string>class com.microchip.mcc.mcu16.systemManager.clk.Clock</string>
       </entry>
       <entry>
-         <string>Pin Module</string>
-         <string>class com.microchip.mcc.mcu16.pinManager.PinManager</string>
-      </entry>
-      <entry>
          <string>WATCHDOG</string>
          <string>class com.microchip.mcc.mcu16.systemManager.wdt.Wdt</string>
       </entry>
       <entry>
-         <string>ICD</string>
-         <string>class com.microchip.mcc.mcu16.systemManager.icd.Icd</string>
+         <string>Pin Module</string>
+         <string>class com.microchip.mcc.mcu16.pinManager.PinManager</string>
       </entry>
       <entry>
          <string>RESET</string>
          <string>class com.microchip.mcc.mcu16.systemManager.reset.RESET</string>
+      </entry>
+      <entry>
+         <string>ICD</string>
+         <string>class com.microchip.mcc.mcu16.systemManager.icd.Icd</string>
       </entry>
       <entry>
          <string>Interrupt Module</string>
@@ -1731,7 +1731,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="trisUserSetRD10"/>
-         <value>disabled</value>
+         <value>enabled</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.OptionKey" moduleName="Pin Module" registerAlias="LATG" settingAlias="LATG6" alias="clear"/>
@@ -2183,7 +2183,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.RegisterKey" moduleName="Pin Module" registerAlias="ANSD"/>
-         <value>65535</value>
+         <value>64511</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.OptionKey" moduleName="Pin Module" registerAlias="TRISF" settingAlias="TRISF3" alias="input"/>
@@ -4231,7 +4231,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.CustomKey" moduleName="Pin Module" name="anselUserSetRD10"/>
-         <value>disabled</value>
+         <value>enabled</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="Pin Module" registerAlias="CNPD1" settingAlias="CN3PDE"/>
@@ -4683,7 +4683,7 @@
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.SettingKey" moduleName="Pin Module" registerAlias="ANSD" settingAlias="ANSELD10"/>
-         <value>analog</value>
+         <value>digital</value>
       </entry>
       <entry>
          <key class="com.microchip.mcc.core.tokenManager.OptionKey" moduleName="Pin Module" registerAlias="LATC" settingAlias="LATC15" alias="clear"/>
@@ -8937,27 +8937,27 @@
       </entry>
       <entry>
          <file>mcc_generated_files/system.c</file>
-         <hash>7625f2731dbeb5ee3780be60afb2e9ade6da7813ed4f239be9bb0af1dc71e1ec</hash>
+         <hash>961c53eb9bea6559f90d198862ab7601876e15657f3df37dce0829501ad7e868</hash>
       </entry>
       <entry>
          <file>main.c</file>
          <hash>629fa6379abd33125469912427614522307c61617997419ee8bfcf8718a76f16</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files/clock.h</file>
-         <hash>34df999c1248fb06d45d186c728a0d0a3d320991b3c4cbd97ac8c89a03796a53</hash>
-      </entry>
-      <entry>
          <file>mcc_generated_files/traps.h</file>
          <hash>0fb7ffc363daae5b4534e9d8af65acd9df2bfe8deb4d1146b8a87ce3ae231d91</hash>
       </entry>
       <entry>
-         <file>mcc_generated_files/clock.c</file>
-         <hash>42f4e11366939bcf38e4a0258f0fbb3b4a9d132a6741393e14c5d57a293aba76</hash>
+         <file>mcc_generated_files/clock.h</file>
+         <hash>34df999c1248fb06d45d186c728a0d0a3d320991b3c4cbd97ac8c89a03796a53</hash>
       </entry>
       <entry>
          <file>mcc_generated_files/traps.c</file>
          <hash>1f345b1398694fe9f0bad240cd11614276c0cb77bd6d7f6adb934fafd0cb6cb6</hash>
+      </entry>
+      <entry>
+         <file>mcc_generated_files/clock.c</file>
+         <hash>42f4e11366939bcf38e4a0258f0fbb3b4a9d132a6741393e14c5d57a293aba76</hash>
       </entry>
       <entry>
          <file>mcc_generated_files/mcc.h</file>
@@ -8977,7 +8977,7 @@
       </entry>
       <entry>
          <file>mcc_generated_files/pin_manager.c</file>
-         <hash>ef1fde19327f1f38b82e9930c7e23e67c99411c65e487908a5b437b5429472f7</hash>
+         <hash>c1285a9529e2f29bef6bb9494515516e811edec1aacfefc64dfe462ad1362e9c</hash>
       </entry>
    </generatedFileHashHistoryMap>
    <mc3libFileHashHistoryMap class="java.util.HashMap"/>
