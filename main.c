@@ -47,9 +47,13 @@
 */
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/spi1.h"
+#include "mcc_generated_files/tmr1.h"
 #define FCY 16000000UL
 #include <libpic30.h>
+#include <stdio.h>
 #define LCD_ADR 0x3E
+
+unsigned int overflowCounter;
 
 //------------------------------------------------------------------------------ 
 //Public prototypes 
@@ -245,40 +249,69 @@ void GLCD_LineHL(uint8_t xH, uint8_t xL, uint8_t t){
     }
 }
 
+void TMR1_int(){
+    overflowCounter++;
+    //PORTEbits.RE0 = ~PORTEbits.RE0;
+}
 /*
                          Main application
  */
 int main(void)
 {
+    char c0[17]="HELLO WORLD !";
+    int i;
+    
+    union {
+        unsigned long dat32;
+        uint16_t dat16[2];
+    } UDAT;
+
     // initialize the device
     DSCON = 0x0000; // must clear RELEASE bit after Deep Sleep
     DSCON = 0x0000; // must be write same command twice
     SYSTEM_Initialize();
+    DAC2DAT = 512;  // Center BIAS
+    TMR1_SetInterruptHandler(TMR1_int);
     LCD_Init();
     GLCD_Init();
-    char c0[17]="HELLO WORLD !";
-    int i;
+    PORTEbits.RE0 = 1;  //Turn on the LED
+    __delay_ms(1000);
+    LCD_xy(0,0);LCD_str2(c0);   // Display "HELLO.."
+    __delay_ms(1000);
+    for (i=0;i<128;i++){    // Test Gfx LCD
+            GLCD_LineHL(i & 0x1f,(i & 0x1f)+16,i);
+    }
+    LCD_clear();
+    PORTEbits.RE0 = 0;  //Turn off the LED
+    /*
+     * Select the Input
+     */
+    PORTBbits.RB2 = 0;
+    PORTBbits.RB3 = 0;
+    PORTBbits.RB4 = 1;
 
     while (1)
     {
         // Add your application code
-        PORTEbits.RE0 = 1;
-        __delay_ms(2000);
+        overflowCounter = 0;
+        TMR3 = 0; PR3 = 62499;      // 16MHz/256/62500=1Hz
+        TMR1 = 0; PR1 = 0xffff;     // Interrupt when 16bit counter overflow
+        IFS0bits.T3IF = 0;
+        T3CONbits.TON = 1;
+        T1CONbits.TON = 1;
+        while(IFS0bits.T3IF == 0);
+        T1CONbits.TON = 0;
+        T3CONbits.TON = 0;
+        IFS0bits.T3IF = 0;
+        UDAT.dat16[0] = TMR1;
+        UDAT.dat16[1] = overflowCounter;
+        sprintf(c0, "FRQ   %8luHz",  UDAT.dat32);
         LCD_xy(0,0);LCD_str2(c0);
-        __delay_ms(2000);
-        
-        for (i=0;i<128;i++){
-                GLCD_LineHL(i & 0x1f,(i & 0x1f)+16,i);
-        }
-        
-        LCD_xy(0,1);LCD_str2(c0);
-        __delay_ms(2000);
-        LCD_clear();
-        __delay_ms(2000);
-        PORTEbits.RE0 = 0;
-        DSCON = 0x8000; // deep sleep mode  0.3uA ! (DSCON=0x0000 --> 360uA)
-        DSCON = 0x8000; // must be write same command twice
-        Sleep();
+
+        PORTEbits.RE0 = ~PORTEbits.RE0;
+//        DSCON = 0x8000; // deep sleep mode  0.3uA ! (DSCON=0x0000 --> 360uA)
+//        DSCON = 0x8000; // must be write same command twice
+//        Sleep();
     }
 
     return 1;

@@ -1,18 +1,19 @@
-/**
-  @Generated PIC24 / dsPIC33 / PIC32MM MCUs Source File
 
-  @Company:
+/**
+  DAC2 Generated Driver File 
+
+  @Company
     Microchip Technology Inc.
 
-  @File Name:
-    system.h
+  @File Name
+    dac2.c
 
-  @Summary:
-    This is the sysetm.h file generated using PIC24 / dsPIC33 / PIC32MM MCUs
+  @Summary
+    This is the generated driver implementation file for the DAC2 driver using PIC24 / dsPIC33 / PIC32MM MCUs
 
-  @Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
-    Generation Information :
+  @Description
+    This header file provides implementations for driver APIs for DAC2. 
+    Generation Information : 
         Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.145.0
         Device            :  PIC24FJ64GC006
     The generated drivers are tested against the following:
@@ -42,27 +43,45 @@
     TERMS.
 */
 
-#include "pin_manager.h"
-#include "clock.h"
-#include "system.h"
-#include "interrupt_manager.h"
-#include "traps.h"
-#include "spi1.h"
-#include "tmr1.h"
-#include "tmr3.h"
+/**
+  Section: Included Files
+*/        
+   
 #include "dac2.h"
 
-void SYSTEM_Initialize(void)
+/**
+  Section: Driver Interface
+*/
+
+void DAC2_Initialize(void)
 {
-    PIN_MANAGER_Initialize();
-    INTERRUPT_Initialize();
-    CLOCK_Initialize();
-    DAC2_Initialize();
-    SPI1_Initialize();
-    TMR3_Initialize();
-    TMR1_Initialize();
+    // DACREF Not Connected; DACFM Right; DACEN enabled; DACTSEL CMP1; DACTRIG disabled; DACSLP disabled; DACSIDL disabled; 
+    DAC2CON = 0x8000;
+    
 }
 
+void DAC2_OutputSet(uint16_t inputData)
+{
+    DAC2DAT  = inputData;
+}
+
+void __attribute__ ((weak)) DAC2_CallBack(void)
+{
+    // Add your custom callback code here
+}
+
+void DAC2_Tasks ( void )
+{
+	if(IFS4bits.DAC2IF)
+	{
+		// DAC2 callback function 
+		DAC2_CallBack();
+		
+		// clear the DAC2 interrupt flag
+		IFS4bits.DAC2IF = 0;
+	}
+}
 /**
- End of File
-*/
+  End of File
+*/ 
+
