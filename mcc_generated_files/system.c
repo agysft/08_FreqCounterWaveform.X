@@ -48,8 +48,10 @@
 #include "interrupt_manager.h"
 #include "traps.h"
 #include "spi1.h"
-#include "tmr1.h"
+#include "padc1.h"
+#include "tmr2.h"
 #include "tmr3.h"
+#include "tmr1.h"
 #include "dac2.h"
 
 void SYSTEM_Initialize(void)
@@ -59,7 +61,9 @@ void SYSTEM_Initialize(void)
     CLOCK_Initialize();
     DAC2_Initialize();
     SPI1_Initialize();
+    PADC1_Initialize();
     TMR3_Initialize();
+    TMR2_Initialize();
     TMR1_Initialize();
 }
 

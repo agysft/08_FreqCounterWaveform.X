@@ -52,6 +52,8 @@
 #include <libpic30.h>
 #include <stdio.h>
 #define LCD_ADR 0x3E
+#define THLVL   2047
+#define Hysteresis  0
 
 unsigned int overflowCounter;
 
@@ -253,18 +255,22 @@ void TMR1_int(){
     overflowCounter++;
     //PORTEbits.RE0 = ~PORTEbits.RE0;
 }
+
 /*
                          Main application
  */
 int main(void)
 {
     char c0[17]="HELLO WORLD !";
-    int i;
+    int i, t0;
     
     union {
         unsigned long dat32;
         uint16_t dat16[2];
     } UDAT;
+    
+    uint16_t pwavedata[256];
+    uint8_t wavedata[128], prev_gx, gx;
 
     // initialize the device
     DSCON = 0x0000; // must clear RELEASE bit after Deep Sleep
@@ -286,13 +292,35 @@ int main(void)
     /*
      * Select the Input
      */
-    PORTBbits.RB2 = 0;
-    PORTBbits.RB3 = 0;
     PORTBbits.RB4 = 1;
+    PORTBbits.RB3 = 0;
+    PORTBbits.RB2 = 0;
 
+
+    /*** DMA CH0 Setting ****/
+	DMACONbits.DMAEN = 1;               // DMA Enable
+	DMACONbits.PRSSEL = 0;              // Fixed Priority
+	DMAH = 0x2000;                      // Upper Limit
+	DMAL = 0x800;                       // Lower Limit
+	DMACH0 = 0;                         // Stop Channel
+	DMACH0bits.RELOAD = 1;              // Reload DMASRC, DMADST, DMACNT
+	DMACH0bits.TRMODE = 0b00;           // Oneshot    
+	DMACH0bits.SAMODE = 0;              // Source Addrs No Increment
+	DMACH0bits.DAMODE = 1;              // Dist Addrs Increment
+	DMACH0bits.SIZE = 0;                // Word Mode(16bit)
+	DMASRC0 = (unsigned int)&ADRES0;    // From ADC Buf0 select
+	DMADST0 = (unsigned int)pwavedata;  // To Buffer select
+	DMACNT0 = 256;                      // DMA Counter
+	DMAINT0 = 0;                        // All Clear
+	DMAINT0bits.CHSEL = 0x2F;           // Select Pipeline ADC
+	DMACH0bits.CHEN = 0;                // Channel DisableEnable
+	IFS0bits.DMA0IF = 0;                // Flag Reset
+    T2CONbits.TON = 0;                  // stop Timer2
+    
     while (1)
     {
         // Add your application code
+        /*** Frequency Count ***/
         overflowCounter = 0;
         TMR3 = 0; PR3 = 62499;      // 16MHz/256/62500=1Hz
         TMR1 = 0; PR1 = 0xffff;     // Interrupt when 16bit counter overflow
@@ -307,7 +335,39 @@ int main(void)
         UDAT.dat16[1] = overflowCounter;
         sprintf(c0, "FRQ   %8luHz",  UDAT.dat32);
         LCD_xy(0,0);LCD_str2(c0);
-
+        
+        /*** Get Waveform 256 word ***/
+        ADCON1bits.ADON = 1;    // ADC Enable
+        TMR2 = 0;               // reset Timer2
+        ADSTATLbits.SL0IF = 0;  // ADC Flag Clear
+        IFS0bits.DMA0IF = 0;    // DMA Interrupt Flag Reset
+        T2CONbits.TON = 1;		// start Timer2 = start ADC
+        DMACH0bits.CHEN = 1;    // DMA Channel Enable & Start
+        while(IFS0bits.DMA0IF == 0);	// Wait Max_Size sampling
+        T2CONbits.TON = 0;      // stop Timer2 = stop ADC
+        IFS0bits.DMA0IF = 0;	// Clear DMA Interrupt Flag
+        DMACH0bits.CHEN = 0;    // DMA Channel Disable & Stop
+        ADCON1bits.ADON = 0;    // ADC Disable
+        
+        // edge detect = seek rising/falling edge
+        for (i=0;i<125;i++){
+            if ( pwavedata[i] > (THLVL - Hysteresis) && pwavedata[i+2] <= (THLVL + Hysteresis) ){
+                break;
+            }
+        }
+        t0 = i;
+        // prepare data for display
+        for (i=0;i<128;i++){
+            wavedata[i] = pwavedata[i+t0] / 86;    //0..4095 -> 0..47
+        }
+        prev_gx = wavedata[0];
+        for (i=0;i<128;i++){
+            gx = wavedata[i];
+//            GLCD_Plot(gx,i);
+            GLCD_LineHL(prev_gx, gx, i);
+            prev_gx = gx;
+        }
+        
         PORTEbits.RE0 = ~PORTEbits.RE0;
 //        DSCON = 0x8000; // deep sleep mode  0.3uA ! (DSCON=0x0000 --> 360uA)
 //        DSCON = 0x8000; // must be write same command twice

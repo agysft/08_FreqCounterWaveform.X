@@ -1222,6 +1222,152 @@
 
 */
 #define IO_RE0_SetDigitalOutput() _TRISE0 = 0
+/**
+  @Summary
+    Sets the GPIO pin, RF4, high using LATF4.
+
+  @Description
+    Sets the GPIO pin, RF4, high using LATF4.
+
+  @Preconditions
+    The RF4 must be set to an output.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Set RF4 high (1)
+    channel_AN11_SetHigh();
+    </code>
+
+*/
+#define channel_AN11_SetHigh()          _LATF4 = 1
+/**
+  @Summary
+    Sets the GPIO pin, RF4, low using LATF4.
+
+  @Description
+    Sets the GPIO pin, RF4, low using LATF4.
+
+  @Preconditions
+    The RF4 must be set to an output.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Set RF4 low (0)
+    channel_AN11_SetLow();
+    </code>
+
+*/
+#define channel_AN11_SetLow()           _LATF4 = 0
+/**
+  @Summary
+    Toggles the GPIO pin, RF4, using LATF4.
+
+  @Description
+    Toggles the GPIO pin, RF4, using LATF4.
+
+  @Preconditions
+    The RF4 must be set to an output.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Toggle RF4
+    channel_AN11_Toggle();
+    </code>
+
+*/
+#define channel_AN11_Toggle()           _LATF4 ^= 1
+/**
+  @Summary
+    Reads the value of the GPIO pin, RF4.
+
+  @Description
+    Reads the value of the GPIO pin, RF4.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    uint16_t portValue;
+
+    // Read RF4
+    postValue = channel_AN11_GetValue();
+    </code>
+
+*/
+#define channel_AN11_GetValue()         _RF4
+/**
+  @Summary
+    Configures the GPIO pin, RF4, as an input.
+
+  @Description
+    Configures the GPIO pin, RF4, as an input.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Sets the RF4 as an input
+    channel_AN11_SetDigitalInput();
+    </code>
+
+*/
+#define channel_AN11_SetDigitalInput()  _TRISF4 = 1
+/**
+  @Summary
+    Configures the GPIO pin, RF4, as an output.
+
+  @Description
+    Configures the GPIO pin, RF4, as an output.
+
+  @Preconditions
+    None.
+
+  @Returns
+    None.
+
+  @Param
+    None.
+
+  @Example
+    <code>
+    // Sets the RF4 as an output
+    channel_AN11_SetDigitalOutput();
+    </code>
+
+*/
+#define channel_AN11_SetDigitalOutput() _TRISF4 = 0
 
 /**
     Section: Function Prototypes
