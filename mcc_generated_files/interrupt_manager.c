@@ -52,6 +52,9 @@
 */
 void INTERRUPT_Initialize (void)
 {
+    //    INT1I: INT1 - External Interrupt 1
+    //    Priority: 1
+        IPC5bits.INT1IP = 1;
     //    TI: T1 - Timer1
     //    Priority: 1
         IPC0bits.T1IP = 1;

@@ -256,6 +256,10 @@ void TMR1_int(){
     //PORTEbits.RE0 = ~PORTEbits.RE0;
 }
 
+void EX_INT1_CallBack(){
+    // pushed the switch of the rotary encoder
+    PORTEbits.RE0 = ~PORTEbits.RE0; //for test
+}
 /*
                          Main application
  */
@@ -278,6 +282,7 @@ int main(void)
     SYSTEM_Initialize();
     DAC2DAT = 512;  // Center BIAS
     TMR1_SetInterruptHandler(TMR1_int);
+
     LCD_Init();
     GLCD_Init();
     PORTEbits.RE0 = 1;  //Turn on the LED
@@ -368,7 +373,7 @@ int main(void)
             prev_gx = gx;
         }
         
-        PORTEbits.RE0 = ~PORTEbits.RE0;
+        //PORTEbits.RE0 = ~PORTEbits.RE0;
 //        DSCON = 0x8000; // deep sleep mode  0.3uA ! (DSCON=0x0000 --> 360uA)
 //        DSCON = 0x8000; // must be write same command twice
 //        Sleep();
