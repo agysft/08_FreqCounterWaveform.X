@@ -48,14 +48,18 @@
 #include "mcc_generated_files/system.h"
 #include "mcc_generated_files/spi1.h"
 #include "mcc_generated_files/tmr1.h"
+#include "mcc_generated_files/tmr5.h"
 #define FCY 16000000UL
 #include <libpic30.h>
 #include <stdio.h>
+#include <p24FJ64GC006.h>
 #define LCD_ADR 0x3E
 #define THLVL   2047
 #define Hysteresis  0
 
 unsigned int overflowCounter;
+int pressedTimeCounter;
+int rotData, rotDir, swPos; float rotVal;
 
 //------------------------------------------------------------------------------ 
 //Public prototypes 
@@ -198,7 +202,7 @@ void GLCD_Init(){
     GLCD_COM(0x2F);
     GLCD_COM(0x23);
     GLCD_COM(0x81);
-    GLCD_COM(0x1C);
+    GLCD_COM(0x1a); // contrast 00 - 3F
     GLCD_COM(0xA4);
     GLCD_COM(0x40);
     GLCD_COM(0xA6);
@@ -252,14 +256,44 @@ void GLCD_LineHL(uint8_t xH, uint8_t xL, uint8_t t){
 }
 
 void TMR1_int(){
+    // when overflow 16bit counter TMR1
     overflowCounter++;
-    //PORTEbits.RE0 = ~PORTEbits.RE0;
 }
 
 void EX_INT1_CallBack(){
     // pushed the switch of the rotary encoder
-    PORTEbits.RE0 = ~PORTEbits.RE0; //for test
+    //PORTEbits.RE0 = ~PORTEbits.RE0; //for test
+    IFS1bits.T5IF = false;
+    IEC1bits.T5IE = true;
 }
+
+void TMR5_int(){
+    // Interrupt occurs every 20ms
+    if (PORTFbits.RF3 == 0) pressedTimeCounter++;
+    rotData = ((rotData & 0x3) << 2) | (PORTF & 0x3);
+    switch(rotData){
+        case 0b0010 :
+        case 0b1011 :
+        case 0b1101 :
+        case 0b0100 : 
+            rotVal-= 0.25;
+            rotDir = -1;
+            return;
+
+        case 0b0001 :
+        case 0b0111 :
+        case 0b1110 :
+        case 0b1000 : 
+            rotVal+= 0.25;
+            rotDir = 1;
+            return;
+
+        default: 
+            rotDir = 0;
+            return;
+    }
+}
+
 /*
                          Main application
  */
@@ -275,6 +309,7 @@ int main(void)
     
     uint16_t pwavedata[256];
     uint8_t wavedata[128], prev_gx, gx;
+    bool skipFrq = false;
 
     // initialize the device
     DSCON = 0x0000; // must clear RELEASE bit after Deep Sleep
@@ -282,16 +317,17 @@ int main(void)
     SYSTEM_Initialize();
     DAC2DAT = 512;  // Center BIAS
     TMR1_SetInterruptHandler(TMR1_int);
+    TMR5_SetInterruptHandler(TMR5_int);
 
     LCD_Init();
     GLCD_Init();
-    PORTEbits.RE0 = 1;  //Turn on the LED
-    __delay_ms(1000);
+    PORTEbits.RE0 = 1;          // Turn on LEFT-UP blue LED
+    PORTGbits.RG2 = 1;          // Turn on rotary-encoder blue LED
     LCD_xy(0,0);LCD_str2(c0);   // Display "HELLO.."
-    __delay_ms(1000);
-    for (i=0;i<128;i++){    // Test Gfx LCD
+    for (i=0;i<128;i++){        // Test Gfx LCD
             GLCD_LineHL(i & 0x1f,(i & 0x1f)+16,i);
     }
+    __delay_ms(2000);   // Test Display 2sec
     LCD_clear();
     PORTEbits.RE0 = 0;  //Turn off the LED
     /*
@@ -321,26 +357,31 @@ int main(void)
 	DMACH0bits.CHEN = 0;                // Channel DisableEnable
 	IFS0bits.DMA0IF = 0;                // Flag Reset
     T2CONbits.TON = 0;                  // stop Timer2
-    
+
+    pressedTimeCounter = 0;     // clear SW pressed Time Counter
+    IEC1bits.T5IE = false;      // disable TMR5 interrupt
+    PORTGbits.RG3 = 0; //for test
+    PORTGbits.RG2 = 1; //for test
     while (1)
     {
         // Add your application code
-        /*** Frequency Count ***/
-        overflowCounter = 0;
-        TMR3 = 0; PR3 = 62499;      // 16MHz/256/62500=1Hz
-        TMR1 = 0; PR1 = 0xffff;     // Interrupt when 16bit counter overflow
-        IFS0bits.T3IF = 0;
-        T3CONbits.TON = 1;
-        T1CONbits.TON = 1;
-        while(IFS0bits.T3IF == 0);
-        T1CONbits.TON = 0;
-        T3CONbits.TON = 0;
-        IFS0bits.T3IF = 0;
-        UDAT.dat16[0] = TMR1;
-        UDAT.dat16[1] = overflowCounter;
-        sprintf(c0, "FRQ   %8luHz",  UDAT.dat32);
-        LCD_xy(0,0);LCD_str2(c0);
-        
+        if (!skipFrq){
+            /*** Frequency Count ***/
+            overflowCounter = 0;
+            TMR3 = 0; PR3 = 62499;      // 16MHz/256/62500=1Hz
+            TMR1 = 0; PR1 = 0xffff;     // Interrupt when 16bit counter overflow
+            IFS0bits.T3IF = 0;
+            T3CONbits.TON = 1;
+            T1CONbits.TON = 1;
+            while(IFS0bits.T3IF == 0);
+            T1CONbits.TON = 0;
+            T3CONbits.TON = 0;
+            IFS0bits.T3IF = 0;
+            UDAT.dat16[0] = TMR1;
+            UDAT.dat16[1] = overflowCounter;
+            sprintf(c0, "FRQ   %8luHz",  UDAT.dat32);
+            LCD_xy(0,0);LCD_str2(c0);
+        }
         /*** Get Waveform 256 word ***/
         ADCON1bits.ADON = 1;    // ADC Enable
         TMR2 = 0;               // reset Timer2
@@ -373,7 +414,29 @@ int main(void)
             prev_gx = gx;
         }
         
+        if ((pressedTimeCounter > 0) ){
+            while (PORTFbits.RF3 == 0){}
+
+            skipFrq = !skipFrq;
+            if (skipFrq) {
+                sprintf(c0, "PUSHED %5d", pressedTimeCounter);
+                LCD_xy(0,1);LCD_str2(c0);
+                rotVal = (float)pressedTimeCounter;
+                IEC1bits.T5IE = true;
+            } else {
+                sprintf(c0, "                ");
+                LCD_xy(0,1);LCD_str2(c0);
+                IEC1bits.T5IE = false;
+            }
+            pressedTimeCounter = 0;
+        }
+        if (rotDir != 0){
+            sprintf(c0, "ROTATE %5d", (int)rotVal);
+            LCD_xy(0,1);LCD_str2(c0);
+        }
         //PORTEbits.RE0 = ~PORTEbits.RE0;
+        PORTGbits.RG3 = ~PORTGbits.RG3; //for test
+        PORTGbits.RG2 = ~PORTGbits.RG2; //for test
 //        DSCON = 0x8000; // deep sleep mode  0.3uA ! (DSCON=0x0000 --> 360uA)
 //        DSCON = 0x8000; // must be write same command twice
 //        Sleep();

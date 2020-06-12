@@ -50,15 +50,16 @@
 #include "pin_manager.h"
 #include <stdint.h>
 #include <stdbool.h>
-#include "dac2.h"
-#include "padc1.h"
+#include "spi1.h"
 #include "ext_int.h"
-#include "tmr1.h"
+#include "padc1.h"
+#include "tmr3.h"
 #include "interrupt_manager.h"
 #include "traps.h"
+#include "tmr1.h"
 #include "tmr2.h"
-#include "tmr3.h"
-#include "spi1.h"
+#include "tmr5.h"
+#include "dac2.h"
 
 #ifndef _XTAL_FREQ
 #define _XTAL_FREQ  32000000UL

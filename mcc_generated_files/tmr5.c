@@ -1,18 +1,18 @@
 
 /**
-  TMR2 Generated Driver API Source File 
+  TMR5 Generated Driver API Source File 
 
   @Company
     Microchip Technology Inc.
 
   @File Name
-    tmr2.c
+    tmr5.c
 
   @Summary
-    This is the generated source file for the TMR2 driver using PIC24 / dsPIC33 / PIC32MM MCUs
+    This is the generated source file for the TMR5 driver using PIC24 / dsPIC33 / PIC32MM MCUs
 
   @Description
-    This source file provides APIs for driver for TMR2. 
+    This source file provides APIs for driver for TMR5. 
     Generation Information : 
         Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.145.0
         Device            :  PIC24FJ64GC006
@@ -48,11 +48,13 @@
 */
 
 #include <stdio.h>
-#include "tmr2.h"
+#include "tmr5.h"
 
 /**
  Section: File specific functions
 */
+void (*TMR5_InterruptHandler)(void) = NULL;
+void TMR5_CallBack(void);
 
 /**
   Section: Data Type Definitions
@@ -80,105 +82,135 @@ typedef struct _TMR_OBJ_STRUCT
 
 } TMR_OBJ;
 
-static TMR_OBJ tmr2_obj;
+static TMR_OBJ tmr5_obj;
 
 /**
   Section: Driver Interface
 */
 
-void TMR2_Initialize (void)
+void TMR5_Initialize (void)
 {
-    //TMR2 0; 
-    TMR2 = 0x00;
-    //Period = 0.000001 s; Frequency = 16000000 Hz; PR2 15; 
-    PR2 = 0x0F;
-    //TCKPS 1:1; T32 16 Bit; TON enabled; TSIDL disabled; TCS FOSC/2; TECS SOSC; TGATE disabled; 
-    T2CON = 0x8000;
+    //TMR5 0; 
+    TMR5 = 0x00;
+    //Period = 0.02 s; Frequency = 16000000 Hz; PR5 39999; 
+    PR5 = 0x9C3F;
+    //TCKPS 1:8; TON enabled; TSIDL disabled; TCS FOSC/2; TECS SOSC; TGATE disabled; 
+    T5CON = 0x8010;
 
+    if(TMR5_InterruptHandler == NULL)
+    {
+        TMR5_SetInterruptHandler(&TMR5_CallBack);
+    }
+
+    IFS1bits.T5IF = false;
+    IEC1bits.T5IE = true;
 	
-    tmr2_obj.timerElapsed = false;
+    tmr5_obj.timerElapsed = false;
 
 }
 
 
-void TMR2_Tasks_16BitOperation( void )
+void __attribute__ ( ( interrupt, no_auto_psv ) ) _T5Interrupt (  )
 {
     /* Check if the Timer Interrupt/Status is set */
-    if(IFS0bits.T2IF)
-    {
-        tmr2_obj.count++;
-        tmr2_obj.timerElapsed = true;
-        IFS0bits.T2IF = false;
+
+    //***User Area Begin
+
+    // ticker function call;
+    // ticker is 1 -> Callback function gets called everytime this ISR executes
+    if(TMR5_InterruptHandler) 
+    { 
+           TMR5_InterruptHandler(); 
     }
+
+    //***User Area End
+
+    tmr5_obj.count++;
+    tmr5_obj.timerElapsed = true;
+    IFS1bits.T5IF = false;
 }
 
-void TMR2_Period16BitSet( uint16_t value )
+void TMR5_Period16BitSet( uint16_t value )
 {
     /* Update the counter values */
-    PR2 = value;
+    PR5 = value;
     /* Reset the status information */
-    tmr2_obj.timerElapsed = false;
+    tmr5_obj.timerElapsed = false;
 }
 
-uint16_t TMR2_Period16BitGet( void )
+uint16_t TMR5_Period16BitGet( void )
 {
-    return( PR2 );
+    return( PR5 );
 }
 
-void TMR2_Counter16BitSet ( uint16_t value )
+void TMR5_Counter16BitSet ( uint16_t value )
 {
     /* Update the counter values */
-    TMR2 = value;
+    TMR5 = value;
     /* Reset the status information */
-    tmr2_obj.timerElapsed = false;
+    tmr5_obj.timerElapsed = false;
 }
 
-uint16_t TMR2_Counter16BitGet( void )
+uint16_t TMR5_Counter16BitGet( void )
 {
-    return( TMR2 );
+    return( TMR5 );
 }
 
 
+void __attribute__ ((weak)) TMR5_CallBack(void)
+{
+    // Add your custom callback code here
+}
 
+void  TMR5_SetInterruptHandler(void (* InterruptHandler)(void))
+{ 
+    IEC1bits.T5IE = false;
+    TMR5_InterruptHandler = InterruptHandler; 
+    IEC1bits.T5IE = true;
+}
 
-void TMR2_Start( void )
+void TMR5_Start( void )
 {
     /* Reset the status information */
-    tmr2_obj.timerElapsed = false;
+    tmr5_obj.timerElapsed = false;
 
+    /*Enable the interrupt*/
+    IEC1bits.T5IE = true;
 
     /* Start the Timer */
-    T2CONbits.TON = 1;
+    T5CONbits.TON = 1;
 }
 
-void TMR2_Stop( void )
+void TMR5_Stop( void )
 {
     /* Stop the Timer */
-    T2CONbits.TON = false;
+    T5CONbits.TON = false;
 
+    /*Disable the interrupt*/
+    IEC1bits.T5IE = false;
 }
 
-bool TMR2_GetElapsedThenClear(void)
+bool TMR5_GetElapsedThenClear(void)
 {
     bool status;
     
-    status = tmr2_obj.timerElapsed;
+    status = tmr5_obj.timerElapsed;
 
     if(status == true)
     {
-        tmr2_obj.timerElapsed = false;
+        tmr5_obj.timerElapsed = false;
     }
     return status;
 }
 
-int TMR2_SoftwareCounterGet(void)
+int TMR5_SoftwareCounterGet(void)
 {
-    return tmr2_obj.count;
+    return tmr5_obj.count;
 }
 
-void TMR2_SoftwareCounterClear(void)
+void TMR5_SoftwareCounterClear(void)
 {
-    tmr2_obj.count = 0; 
+    tmr5_obj.count = 0; 
 }
 
 /**

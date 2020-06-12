@@ -55,8 +55,8 @@
 
 void DAC2_Initialize(void)
 {
-    // DACREF Not Connected; DACFM Right; DACEN enabled; DACTSEL CMP1; DACTRIG disabled; DACSLP disabled; DACSIDL disabled; 
-    DAC2CON = 0x8000;
+    // DACREF AVDD; DACFM Right; DACEN enabled; DACTSEL CMP1; DACTRIG disabled; DACSLP disabled; DACSIDL disabled; 
+    DAC2CON = 0x8002;
     
 }
 

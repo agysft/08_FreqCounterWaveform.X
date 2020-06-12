@@ -45,26 +45,28 @@
 #include "pin_manager.h"
 #include "clock.h"
 #include "system.h"
-#include "dac2.h"
-#include "padc1.h"
+#include "spi1.h"
 #include "ext_int.h"
-#include "tmr1.h"
+#include "padc1.h"
+#include "tmr3.h"
 #include "interrupt_manager.h"
 #include "traps.h"
+#include "tmr1.h"
 #include "tmr2.h"
-#include "tmr3.h"
-#include "spi1.h"
+#include "tmr5.h"
+#include "dac2.h"
 
 void SYSTEM_Initialize(void)
 {
     PIN_MANAGER_Initialize();
-    CLOCK_Initialize();
     INTERRUPT_Initialize();
+    CLOCK_Initialize();
     DAC2_Initialize();
     SPI1_Initialize();
     PADC1_Initialize();
     TMR3_Initialize();
     TMR2_Initialize();
+    TMR5_Initialize();
     EXT_INT_Initialize();
     TMR1_Initialize();
 }
