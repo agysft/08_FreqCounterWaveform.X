@@ -346,7 +346,7 @@ int main(void)
     }
     __delay_ms(2000);   // Test Display 2sec
     LCD_clear();
-    PORTEbits.RE0 = 0;  //Turn off the LED
+    //PORTEbits.RE0 = 0;  //Turn off the LED
     /*
      * Select the Input
      */
@@ -447,12 +447,12 @@ int main(void)
                 PORTGbits.RG2 = 1; // Turn on the blue LED
                 if (ModeVal == 2){
                     rotVal = TimeAxisTableIndex;
-                    LCD_xy(0,0);LCD_str2("Trigger Cycle   ");
+                    LCD_xy(0,0);LCD_str2("Time/div        ");
                     sprintf(c0, "T %5s ", TimeAxisTable_s[TimeAxisTableIndex]); LCD_xy(0,1);LCD_str2(c0);
                 }
                 if (ModeVal == 3){
                     rotVal = (float)DAC2DAT/35;
-                    LCD_xy(0,0);LCD_str2("Trigger Level   ");
+                    LCD_xy(0,0);LCD_str2("Level Wave Pos  ");
                     sprintf(c0, "   L %3d",(int)rotVal); LCD_xy(8,1);LCD_str2(c0);
                 }
             } else {
