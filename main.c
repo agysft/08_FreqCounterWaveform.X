@@ -60,6 +60,23 @@
 unsigned int overflowCounter;
 int pressedTimeCounter;
 int rotData, rotDir, swPos; float rotVal;
+//Time axis setting table
+    /*
+     *          PR2
+     * 250ns    0x03
+     * 500ns    0x07
+     * 1us      0x0f
+     * 2.5us    0x27
+     * 5us      0x4f
+     * 10us     0x9f
+     * 25us     0x18f
+     * 50us     0x31f
+     * 100us    0x63f
+     * 250us    0xF9F
+     */
+uint8_t TimeAxisTableIndex = 2;
+uint16_t TimeAxisTable[]={3,7,0x0f,0x27,0x4f,0x9f,0x18f,0x31f,0x63f,0xf9f};
+char TimeAxisTable_s[10][6]={"250ns","500ns","1us","2.5us","5us","10us","25us","50us","100us","250us"};
 
 //------------------------------------------------------------------------------ 
 //Public prototypes 
@@ -309,7 +326,7 @@ int main(void)
     
     uint16_t pwavedata[256];
     uint8_t wavedata[128], prev_gx, gx;
-    bool skipFrq = false;
+    int ModeVal = 1;
 
     // initialize the device
     DSCON = 0x0000; // must clear RELEASE bit after Deep Sleep
@@ -360,13 +377,18 @@ int main(void)
 
     pressedTimeCounter = 0;     // clear SW pressed Time Counter
     IEC1bits.T5IE = false;      // disable TMR5 interrupt
-    PORTGbits.RG3 = 0; //for test
-    PORTGbits.RG2 = 1; //for test
+    PORTGbits.RG3 = 0; // clear orage LED
+    PORTGbits.RG2 = 0; // clear blue LED
+    sprintf(c0, "T %5s ", TimeAxisTable_s[TimeAxisTableIndex]); LCD_xy(0,1);LCD_str2(c0);
+    sprintf(c0, "   L %3d", DAC2DAT/35); LCD_xy(8,1);LCD_str2(c0);
     while (1)
     {
         // Add your application code
-        if (!skipFrq){
+        if (ModeVal ==1){
+            PORTGbits.RG3 = 0; // clear orage LED
+            PORTGbits.RG2 = 0; // clear blue LED
             /*** Frequency Count ***/
+            IEC1bits.T5IE = false;
             overflowCounter = 0;
             TMR3 = 0; PR3 = 62499;      // 16MHz/256/62500=1Hz
             TMR1 = 0; PR1 = 0xffff;     // Interrupt when 16bit counter overflow
@@ -382,64 +404,85 @@ int main(void)
             sprintf(c0, "FRQ   %8luHz",  UDAT.dat32);
             LCD_xy(0,0);LCD_str2(c0);
         }
-        /*** Get Waveform 256 word ***/
-        ADCON1bits.ADON = 1;    // ADC Enable
-        TMR2 = 0;               // reset Timer2
-        ADSTATLbits.SL0IF = 0;  // ADC Flag Clear
-        IFS0bits.DMA0IF = 0;    // DMA Interrupt Flag Reset
-        T2CONbits.TON = 1;		// start Timer2 = start ADC
-        DMACH0bits.CHEN = 1;    // DMA Channel Enable & Start
-        while(IFS0bits.DMA0IF == 0);	// Wait Max_Size sampling
-        T2CONbits.TON = 0;      // stop Timer2 = stop ADC
-        IFS0bits.DMA0IF = 0;	// Clear DMA Interrupt Flag
-        DMACH0bits.CHEN = 0;    // DMA Channel Disable & Stop
-        ADCON1bits.ADON = 0;    // ADC Disable
         
-        // edge detect = seek rising/falling edge
-        for (i=0;i<125;i++){
-            if ( pwavedata[i] > (THLVL - Hysteresis) && pwavedata[i+2] <= (THLVL + Hysteresis) ){
-                break;
+        if (ModeVal < 4){
+            /*** Get Waveform 256 word ***/
+            ADCON1bits.ADON = 1;    // ADC Enable
+            TMR2 = 0;               // reset Timer2
+            ADSTATLbits.SL0IF = 0;  // ADC Flag Clear
+            IFS0bits.DMA0IF = 0;    // DMA Interrupt Flag Reset
+            T2CONbits.TON = 1;		// start Timer2 = start ADC
+            DMACH0bits.CHEN = 1;    // DMA Channel Enable & Start
+            while(IFS0bits.DMA0IF == 0);	// Wait Max_Size sampling
+            T2CONbits.TON = 0;      // stop Timer2 = stop ADC
+            IFS0bits.DMA0IF = 0;	// Clear DMA Interrupt Flag
+            DMACH0bits.CHEN = 0;    // DMA Channel Disable & Stop
+            ADCON1bits.ADON = 0;    // ADC Disable
+
+            // edge detect = seek rising/falling edge
+            for (i=0;i<125;i++){
+                if ( pwavedata[i] > (THLVL - Hysteresis) && pwavedata[i+2] <= (THLVL + Hysteresis) ){
+                    break;
+                }
             }
-        }
-        t0 = i;
-        // prepare data for display
-        for (i=0;i<128;i++){
-            wavedata[i] = pwavedata[i+t0] / 86;    //0..4095 -> 0..47
-        }
-        prev_gx = wavedata[0];
-        for (i=0;i<128;i++){
-            gx = wavedata[i];
-//            GLCD_Plot(gx,i);
-            GLCD_LineHL(prev_gx, gx, i);
-            prev_gx = gx;
+            t0 = i;
+            // prepare data for display
+            for (i=0;i<128;i++){
+                wavedata[i] = pwavedata[i+t0] / 86;    //0..4095 -> 0..47
+            }
+            prev_gx = wavedata[0];
+            for (i=0;i<128;i++){
+                gx = wavedata[i];
+    //            GLCD_Plot(gx,i);
+                GLCD_LineHL(prev_gx, gx, i);
+                prev_gx = gx;
+            }
         }
         
         if ((pressedTimeCounter > 0) ){
             while (PORTFbits.RF3 == 0){}    // Wait until switch is released
             if (pressedTimeCounter < 100){
-                skipFrq = !skipFrq;
-                if (skipFrq) {
-                    sprintf(c0, "PUSHED %5d", pressedTimeCounter);
-                    LCD_xy(0,1);LCD_str2(c0);
-                    rotVal = (float)pressedTimeCounter;
-                    IEC1bits.T5IE = true;
-                } else {
-                    sprintf(c0, "                ");
-                    LCD_xy(0,1);LCD_str2(c0);
-                    IEC1bits.T5IE = false;
+                ++ModeVal;
+                if (ModeVal > 3) ModeVal = 1;
+                PORTGbits.RG2 = 1; // Turn on the blue LED
+                if (ModeVal == 2){
+                    rotVal = TimeAxisTableIndex;
+                    LCD_xy(0,0);LCD_str2("Trigger Cycle   ");
+                    sprintf(c0, "T %5s ", TimeAxisTable_s[TimeAxisTableIndex]); LCD_xy(0,1);LCD_str2(c0);
+                }
+                if (ModeVal == 3){
+                    rotVal = (float)DAC2DAT/35;
+                    LCD_xy(0,0);LCD_str2("Trigger Level   ");
+                    sprintf(c0, "   L %3d",(int)rotVal); LCD_xy(8,1);LCD_str2(c0);
                 }
             } else {
                 // When the switch is pressed for 2 seconds or more
             }
             pressedTimeCounter = 0;
         }
-        if (rotDir != 0){
-            sprintf(c0, "ROTATE %5d", (int)rotVal);
-            LCD_xy(0,1);LCD_str2(c0);
+        
+        if (ModeVal == 2){
+            if (rotDir != 0){
+                if (rotVal > 9) rotVal = 9;
+                if (rotVal <= 0) rotVal = 0;
+                TimeAxisTableIndex = (uint8_t)rotVal;
+                PR2 = TimeAxisTable[TimeAxisTableIndex];
+                sprintf(c0, "T %5s ", TimeAxisTable_s[TimeAxisTableIndex]); LCD_xy(0,1);LCD_str2(c0);
+            }
         }
+        
+        if (ModeVal == 3){
+            if (rotDir != 0){
+                if (rotVal > 29) rotVal = 29;
+                if (rotVal <= 3) rotVal = 3;
+                DAC2DAT = (uint16_t)(rotVal*35);
+                sprintf(c0, "   L %3d",(int)rotVal); LCD_xy(8,1);LCD_str2(c0);
+            }
+        }
+
         //PORTEbits.RE0 = ~PORTEbits.RE0;
-        PORTGbits.RG3 = ~PORTGbits.RG3; //for test
-        PORTGbits.RG2 = ~PORTGbits.RG2; //for test
+        //PORTGbits.RG3 = ~PORTGbits.RG3; //for test
+        //PORTGbits.RG2 = ~PORTGbits.RG2; //for test
 //        DSCON = 0x8000; // deep sleep mode  0.3uA ! (DSCON=0x0000 --> 360uA)
 //        DSCON = 0x8000; // must be write same command twice
 //        Sleep();
