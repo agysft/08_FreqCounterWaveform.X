@@ -415,18 +415,21 @@ int main(void)
         }
         
         if ((pressedTimeCounter > 0) ){
-            while (PORTFbits.RF3 == 0){}
-
-            skipFrq = !skipFrq;
-            if (skipFrq) {
-                sprintf(c0, "PUSHED %5d", pressedTimeCounter);
-                LCD_xy(0,1);LCD_str2(c0);
-                rotVal = (float)pressedTimeCounter;
-                IEC1bits.T5IE = true;
+            while (PORTFbits.RF3 == 0){}    // Wait until switch is released
+            if (pressedTimeCounter < 100){
+                skipFrq = !skipFrq;
+                if (skipFrq) {
+                    sprintf(c0, "PUSHED %5d", pressedTimeCounter);
+                    LCD_xy(0,1);LCD_str2(c0);
+                    rotVal = (float)pressedTimeCounter;
+                    IEC1bits.T5IE = true;
+                } else {
+                    sprintf(c0, "                ");
+                    LCD_xy(0,1);LCD_str2(c0);
+                    IEC1bits.T5IE = false;
+                }
             } else {
-                sprintf(c0, "                ");
-                LCD_xy(0,1);LCD_str2(c0);
-                IEC1bits.T5IE = false;
+                // When the switch is pressed for 2 seconds or more
             }
             pressedTimeCounter = 0;
         }
