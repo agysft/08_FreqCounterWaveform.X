@@ -53,30 +53,28 @@
 #include <libpic30.h>
 #include <stdio.h>
 #include <p24FJ64GC006.h>
-#define LCD_ADR 0x3E
-#define THLVL   2047
-#define Hysteresis  0
+#define LCD_ADR 0x3E    // I2C address of the character LCD
 
 unsigned int overflowCounter;
-int pressedTimeCounter;
+int pressedTime = 0;
 int rotData, rotDir, swPos; float rotVal;
 //Time axis setting table
     /*
      *          PR2
      * 250ns    0x03
      * 500ns    0x07
-     * 1us      0x0f
+     *   1us    0x0f
      * 2.5us    0x27
-     * 5us      0x4f
-     * 10us     0x9f
-     * 25us     0x18f
-     * 50us     0x31f
+     *   5us    0x4f
+     *  10us    0x9f
+     *  25us    0x18f
+     *  50us    0x31f
      * 100us    0x63f
      * 250us    0xF9F
      */
 uint8_t TimeAxisTableIndex = 2;
-uint16_t TimeAxisTable[]={3,7,0x0f,0x27,0x4f,0x9f,0x18f,0x31f,0x63f,0xf9f};
-char TimeAxisTable_s[10][6]={"250ns","500ns","1us","2.5us","5us","10us","25us","50us","100us","250us"};
+uint16_t TimeAxisTable[]={3, 7, 0x0f, 0x27, 0x4f, 0x9f, 0x18f, 0x31f, 0x63f, 0xf9f};
+char TimeAxisTable_s[10][6]={"250ns","500ns","  1us","2.5us","  5us"," 10us"," 25us"," 50us","100us","250us"};
 
 //------------------------------------------------------------------------------ 
 //Public prototypes 
@@ -279,14 +277,15 @@ void TMR1_int(){
 
 void EX_INT1_CallBack(){
     // pushed the switch of the rotary encoder
-    //PORTEbits.RE0 = ~PORTEbits.RE0; //for test
     IFS1bits.T5IF = false;
-    IEC1bits.T5IE = true;
+    IEC1bits.T5IE = true;   // enable detection of the rotary encoder
 }
 
 void TMR5_int(){
-    // Interrupt occurs every 20ms
-    if (PORTFbits.RF3 == 0) pressedTimeCounter++;
+    // Interrupt occurs every 20ms; 
+    //  for detection of the rotary encoder and
+    //  for detection of the pressed time of the SW
+    if (PORTFbits.RF3 == 0) pressedTime++;
     rotData = ((rotData & 0x3) << 2) | (PORTF & 0x3);
     switch(rotData){
         case 0b0010 :
@@ -324,8 +323,11 @@ int main(void)
         uint16_t dat16[2];
     } UDAT;
     
-    uint16_t pwavedata[256];
-    uint8_t wavedata[128], prev_gx, gx;
+    #define THLVL   2047    // Threshold level; for edge detection of waveform; Resolution of PADC is 12 bits
+    #define Hysteresis  1   // Reduce noise on the voltage axis
+    #define DetectionInterval   2   // Reduce noise on the time axis
+    uint16_t originalWavedata[256];
+    uint8_t byteWavedata[128], prev_gx, gx;
     int ModeVal = 1;
 
     // initialize the device
@@ -367,7 +369,7 @@ int main(void)
 	DMACH0bits.DAMODE = 1;              // Dist Addrs Increment
 	DMACH0bits.SIZE = 0;                // Word Mode(16bit)
 	DMASRC0 = (unsigned int)&ADRES0;    // From ADC Buf0 select
-	DMADST0 = (unsigned int)pwavedata;  // To Buffer select
+	DMADST0 = (unsigned int)originalWavedata;  // To Buffer select
 	DMACNT0 = 256;                      // DMA Counter
 	DMAINT0 = 0;                        // All Clear
 	DMAINT0bits.CHSEL = 0x2F;           // Select Pipeline ADC
@@ -375,8 +377,7 @@ int main(void)
 	IFS0bits.DMA0IF = 0;                // Flag Reset
     T2CONbits.TON = 0;                  // stop Timer2
 
-    pressedTimeCounter = 0;     // clear SW pressed Time Counter
-    IEC1bits.T5IE = false;      // disable TMR5 interrupt
+    IEC1bits.T5IE = false;      // disable TMR5 interrupt; stop detection of the rotary encoder
     PORTGbits.RG3 = 0; // clear orage LED
     PORTGbits.RG2 = 0; // clear blue LED
     sprintf(c0, "T %5s ", TimeAxisTable_s[TimeAxisTableIndex]); LCD_xy(0,1);LCD_str2(c0);
@@ -421,27 +422,27 @@ int main(void)
 
             // edge detect = seek rising/falling edge
             for (i=0;i<125;i++){
-                if ( pwavedata[i] > (THLVL - Hysteresis) && pwavedata[i+2] <= (THLVL + Hysteresis) ){
+                if ( originalWavedata[i] > (THLVL - Hysteresis) && originalWavedata[i+DetectionInterval] <= (THLVL + Hysteresis) ){
                     break;
                 }
             }
             t0 = i;
             // prepare data for display
             for (i=0;i<128;i++){
-                wavedata[i] = pwavedata[i+t0] / 86;    //0..4095 -> 0..47
+                byteWavedata[i] = originalWavedata[i+t0] / 86;    //0..4095 -> 0..47
             }
-            prev_gx = wavedata[0];
+            prev_gx = byteWavedata[0];
             for (i=0;i<128;i++){
-                gx = wavedata[i];
+                gx = byteWavedata[i];
     //            GLCD_Plot(gx,i);
                 GLCD_LineHL(prev_gx, gx, i);
                 prev_gx = gx;
             }
         }
         
-        if ((pressedTimeCounter > 0) ){
+        if (pressedTime > 0){
             while (PORTFbits.RF3 == 0){}    // Wait until switch is released
-            if (pressedTimeCounter < 100){
+            if (pressedTime < 100){
                 ++ModeVal;
                 if (ModeVal > 3) ModeVal = 1;
                 PORTGbits.RG2 = 1; // Turn on the blue LED
@@ -458,7 +459,7 @@ int main(void)
             } else {
                 // When the switch is pressed for 2 seconds or more
             }
-            pressedTimeCounter = 0;
+            pressedTime = 0;
         }
         
         if (ModeVal == 2){
