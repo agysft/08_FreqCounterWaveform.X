@@ -53,11 +53,16 @@
 #include <libpic30.h>
 #include <stdio.h>
 #include <p24FJ64GC006.h>
+#include "mcc_generated_files/rtcc.h"
 #define LCD_ADR 0x3E    // I2C address of the character LCD
 
+// frequency counter
 unsigned int overflowCounter;
+
+// rotaly encoder
 int pressedTime = 0;
 int rotData, rotDir, swPos; float rotVal;
+
 //Time axis setting table
     /*
      *          PR2
@@ -76,6 +81,9 @@ uint8_t TimeAxisTableIndex = 2;
 uint16_t TimeAxisTable[]={3, 7, 0x0f, 0x27, 0x4f, 0x9f, 0x18f, 0x31f, 0x63f, 0xf9f};
 char TimeAxisTable_s[10][6]={"250ns","500ns","  1us","2.5us","  5us"," 10us"," 25us"," 50us","100us","250us"};
 
+// function mode
+int ModeVal = 1;
+    
 //------------------------------------------------------------------------------ 
 //Public prototypes 
 //------------------------------------------------------------------------------ 
@@ -156,7 +164,12 @@ void LCD_Init(){
     writeLCDCommand(0x38);
     writeLCDCommand(0x01);
     __delay_us(1100);        //Instruction Execution Time 0.59-1.08ms (550:NG, 600:GOOD)
-    writeLCDCommand(0x0C);
+    writeLCDCommand(0x0c);
+}
+void LCD_OFF(){
+    writeLCDCommand(0x08);
+    writeLCDCommand(0x50);
+    writeLCDCommand(0x60);
 }
 
 void LCD_xy(uint8_t x, uint8_t y){
@@ -222,6 +235,10 @@ void GLCD_Init(){
     GLCD_COM(0x40);
     GLCD_COM(0xA6);
     GLCD_COM(0xAF);
+}
+
+void GLCD_OFF(){
+    GLCD_COM(0xAE);
 }
 
 void GLCD_Plot(uint8_t x, uint8_t y){
@@ -292,7 +309,7 @@ void TMR5_int(){
         case 0b1011 :
         case 0b1101 :
         case 0b0100 : 
-            rotVal-= 0.25;
+            rotVal-= 0.5;
             rotDir = -1;
             return;
 
@@ -300,7 +317,7 @@ void TMR5_int(){
         case 0b0111 :
         case 0b1110 :
         case 0b1000 : 
-            rotVal+= 0.25;
+            rotVal+= 0.5;
             rotDir = 1;
             return;
 
@@ -308,6 +325,35 @@ void TMR5_int(){
             rotDir = 0;
             return;
     }
+}
+
+void DisplayCurrentDateAndTime(bcdTime_t currentTime, char *c0){
+    RTCC_BCDTimeGet( &currentTime );
+    sprintf(c0, "20%02x/%02x/%02x %02x:%02x", 
+            currentTime.tm_year, currentTime.tm_mon, 
+            currentTime.tm_mday, //currentTime.tm_wday
+            currentTime.tm_hour, currentTime.tm_min 
+            );
+    LCD_xy(0,1);LCD_str2(c0);
+}
+
+void EX_INT0_CallBack(){
+    ModeVal = 10;
+}
+
+uint8_t ConvertHexToBCD(uint8_t hexvalue)
+{
+    uint8_t bcdvalue;
+    bcdvalue = (hexvalue / 10) << 4;
+    bcdvalue = bcdvalue | (hexvalue % 10);
+    return bcdvalue;
+}
+
+uint8_t ConvertBCDToHex(uint8_t bcdvalue)
+{
+    uint8_t hexvalue;
+    hexvalue = (((bcdvalue & 0xF0) >> 4)* 10) + (bcdvalue & 0x0F);
+    return hexvalue;
 }
 
 /*
@@ -328,7 +374,9 @@ int main(void)
     #define DetectionInterval   2   // Reduce noise on the time axis
     uint16_t originalWavedata[256];
     uint8_t byteWavedata[128], prev_gx, gx;
-    int ModeVal = 1;
+
+    bcdTime_t currentTime, setTime;
+    uint8_t arrayDateTime[6];
 
     // initialize the device
     DSCON = 0x0000; // must clear RELEASE bit after Deep Sleep
@@ -340,12 +388,15 @@ int main(void)
 
     LCD_Init();
     GLCD_Init();
+    // Demo
     PORTEbits.RE0 = 1;          // Turn on LEFT-UP blue LED
     PORTGbits.RG2 = 1;          // Turn on rotary-encoder blue LED
     LCD_xy(0,0);LCD_str2(c0);   // Display "HELLO.."
     for (i=0;i<128;i++){        // Test Gfx LCD
             GLCD_LineHL(i & 0x1f,(i & 0x1f)+16,i);
     }
+    __delay_ms(1000);   // Test Display 2sec
+    DisplayCurrentDateAndTime(currentTime, c0);
     __delay_ms(2000);   // Test Display 2sec
     LCD_clear();
     //PORTEbits.RE0 = 0;  //Turn off the LED
@@ -443,8 +494,8 @@ int main(void)
         if (pressedTime > 0){
             while (PORTFbits.RF3 == 0){}    // Wait until switch is released
             if (pressedTime < 100){
-                ++ModeVal;
-                if (ModeVal > 3) ModeVal = 1;
+                ModeVal++;
+                if (ModeVal == 4) ModeVal = 1;
                 PORTGbits.RG2 = 1; // Turn on the blue LED
                 if (ModeVal == 2){
                     rotVal = TimeAxisTableIndex;
@@ -456,8 +507,48 @@ int main(void)
                     LCD_xy(0,0);LCD_str2("Level Wave Pos  ");
                     sprintf(c0, "   L %3d",(int)rotVal); LCD_xy(8,1);LCD_str2(c0);
                 }
+                if (ModeVal > 3){
+                    arrayDateTime[ModeVal-5] = rotVal;
+                    rotVal = arrayDateTime[ModeVal-4];
+                }
+                if (ModeVal >8){
+                    setTime.tm_year = ConvertHexToBCD((uint8_t) arrayDateTime[0]);
+                    setTime.tm_mon  = ConvertHexToBCD((uint8_t) arrayDateTime[1]);
+                    setTime.tm_mday = ConvertHexToBCD((uint8_t) arrayDateTime[2]);
+                    setTime.tm_hour = ConvertHexToBCD((uint8_t) arrayDateTime[3]);
+                    setTime.tm_min  = ConvertHexToBCD((uint8_t) arrayDateTime[4]);
+                    RTCC_BCDTimeSet(&setTime);
+                    LCD_clear();
+                    ModeVal = 1;
+                }
             } else {
                 // When the switch is pressed for 2 seconds or more
+                if (ModeVal < 4){
+                    ModeVal = 4;
+                } else ModeVal++;
+                if (ModeVal == 4){
+                    RTCC_BCDTimeGet( &currentTime );
+                    setTime = currentTime;
+                    arrayDateTime[0] = ConvertBCDToHex((uint8_t)setTime.tm_year);
+                    arrayDateTime[1] = ConvertBCDToHex((uint8_t)setTime.tm_mon);
+                    arrayDateTime[2] = ConvertBCDToHex((uint8_t)setTime.tm_mday);
+                    arrayDateTime[3] = ConvertBCDToHex((uint8_t)setTime.tm_hour);
+                    arrayDateTime[4] = ConvertBCDToHex((uint8_t)setTime.tm_min);
+                    LCD_clear();
+                    DisplayCurrentDateAndTime(currentTime, c0);
+                    rotVal = arrayDateTime[0];
+                }
+
+                if (ModeVal>4){
+                    ModeVal = 1;
+                    setTime.tm_year = ConvertHexToBCD((uint8_t) arrayDateTime[0]);
+                    setTime.tm_mon  = ConvertHexToBCD((uint8_t) arrayDateTime[1]);
+                    setTime.tm_mday = ConvertHexToBCD((uint8_t) arrayDateTime[2]);
+                    setTime.tm_hour = ConvertHexToBCD((uint8_t) arrayDateTime[3]);
+                    setTime.tm_min  = ConvertHexToBCD((uint8_t) arrayDateTime[4]);
+                    RTCC_BCDTimeSet(&setTime);
+                    LCD_clear();
+                }
             }
             pressedTime = 0;
         }
@@ -480,13 +571,44 @@ int main(void)
                 sprintf(c0, "   L %3d",(int)rotVal); LCD_xy(8,1);LCD_str2(c0);
             }
         }
+        
+        if (ModeVal == 4){
+            sprintf(c0, "Set Year        "); LCD_xy(0,0); LCD_str2(c0);
+            sprintf(c0, "%2d",(uint8_t)rotVal); LCD_xy(2,1); LCD_str2(c0);
+        }
 
+        if (ModeVal == 5){
+            sprintf(c0, "Set Month      "); LCD_xy(0,0); LCD_str2(c0);
+            sprintf(c0, "%2d",(uint8_t)rotVal); LCD_xy(5,1); LCD_str2(c0);
+        }
+        
+        if (ModeVal == 6){
+            sprintf(c0, "Set Date       "); LCD_xy(0,0); LCD_str2(c0);
+            sprintf(c0, "%2d",(uint8_t)rotVal); LCD_xy(8,1); LCD_str2(c0);
+        }
+
+        if (ModeVal == 7){
+            sprintf(c0, "Set Hour       "); LCD_xy(0,0); LCD_str2(c0);
+            sprintf(c0, "%2d",(uint8_t)rotVal); LCD_xy(11,1); LCD_str2(c0);
+        }
+
+        if (ModeVal == 8){
+            sprintf(c0, "Set Minute     "); LCD_xy(0,0); LCD_str2(c0);
+            sprintf(c0, "%2d",(uint8_t)rotVal); LCD_xy(14,1); LCD_str2(c0);
+        }
         //PORTEbits.RE0 = ~PORTEbits.RE0;
         //PORTGbits.RG3 = ~PORTGbits.RG3; //for test
         //PORTGbits.RG2 = ~PORTGbits.RG2; //for test
-//        DSCON = 0x8000; // deep sleep mode  0.3uA ! (DSCON=0x0000 --> 360uA)
-//        DSCON = 0x8000; // must be write same command twice
-//        Sleep();
+        if (ModeVal == 10){
+            DisplayCurrentDateAndTime(currentTime, c0);
+            __delay_ms(5000);   // Test Display 5sec
+            PORTEbits.RE0 = 0;          // Turn off LEFT-UP blue LED
+            LCD_clear();
+            GLCD_OFF();
+            DSCON = 0x8000; // deep sleep mode  0.3uA ! (DSCON=0x0000 --> 360uA)
+            DSCON = 0x8000; // must be write same command twice
+            Sleep();
+        }
     }
 
     return 1;

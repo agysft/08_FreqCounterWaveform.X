@@ -88,7 +88,7 @@ void PIN_MANAGER_Initialize (void)
     CNPD1 = 0x0000;
     CNPD2 = 0x0000;
     CNPD3 = 0x0000;
-    CNPD4 = 0x0000;
+    CNPD4 = 0x0002;
     CNPD5 = 0x0000;
     CNPD6 = 0x0000;
     CNPU1 = 0x0000;
@@ -112,7 +112,7 @@ void PIN_MANAGER_Initialize (void)
      * Setting the Analog/Digital Configuration SFR(s)
      ***************************************************************************/
     ANSB = 0xE0E0;
-    ANSD = 0xFBE1;
+    ANSD = 0xFBE0;
     ANSE = 0x00F0;
     ANSF = 0x00B0;
     ANSG = 0x03C0;
@@ -125,9 +125,9 @@ void PIN_MANAGER_Initialize (void)
      ***************************************************************************/
     __builtin_write_OSCCONL(OSCCON & 0xbf); // unlock PPS
 
-    RPOR12bits.RP24R = 0x0008;    //RD1->SPI1:SCK1OUT
     RPOR11bits.RP23R = 0x0007;    //RD2->SPI1:SDO1
     RPINR0bits.INT1R = 0x0010;    //RF3->EXT_INT:INT1
+    RPOR12bits.RP24R = 0x0008;    //RD1->SPI1:SCK1OUT
 
     __builtin_write_OSCCONL(OSCCON | 0x40); // lock PPS
 

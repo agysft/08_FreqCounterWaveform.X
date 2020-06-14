@@ -58,6 +58,23 @@
    Section: External Interrupt Handlers
 */
  
+ void __attribute__ ((weak)) EX_INT0_CallBack(void)
+{
+    // Add your custom callback code here
+}
+
+/**
+  Interrupt Handler for EX_INT0 - INT0
+*/
+void __attribute__ ( ( interrupt, no_auto_psv ) ) _INT0Interrupt(void)
+{
+    //***User Area Begin->code: INT0 - External Interrupt 0***
+	
+	EX_INT0_CallBack();
+    
+	//***User Area End->code: INT0 - External Interrupt 0***
+    EX_INT0_InterruptFlagClear();
+}
  void __attribute__ ((weak)) EX_INT1_CallBack(void)
 {
     // Add your custom callback code here
@@ -82,10 +99,20 @@ void __attribute__ ( ( interrupt, no_auto_psv ) ) _INT1Interrupt(void)
     void EXT_INT_Initialize(void)
 
     Initializer for the following external interrupts
+    INT0
     INT1
 */
 void EXT_INT_Initialize(void)
 {
+    /*******
+     * INT0
+     * Clear the interrupt flag
+     * Set the external interrupt edge detect
+     * Enable the interrupt, if enabled in the UI. 
+     ********/
+    EX_INT0_InterruptFlagClear();   
+    EX_INT0_PositiveEdgeSet();
+    EX_INT0_InterruptEnable();
     /*******
      * INT1
      * Clear the interrupt flag

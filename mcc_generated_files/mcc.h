@@ -51,15 +51,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "spi1.h"
-#include "ext_int.h"
 #include "padc1.h"
-#include "tmr3.h"
+#include "rtcc.h"
+#include "dac2.h"
 #include "interrupt_manager.h"
 #include "traps.h"
+#include "ext_int.h"
+#include "tmr5.h"
+#include "tmr3.h"
 #include "tmr1.h"
 #include "tmr2.h"
-#include "tmr5.h"
-#include "dac2.h"
 
 #ifndef _XTAL_FREQ
 #define _XTAL_FREQ  32000000UL
