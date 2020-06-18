@@ -54,6 +54,7 @@
 #include <stdio.h>
 #include <p24FJ64GC006.h>
 #include "mcc_generated_files/rtcc.h"
+#include "font_ascii.h"
 #define LCD_ADR 0x3E    // I2C address of the character LCD
 
 // frequency counter
@@ -287,6 +288,18 @@ void GLCD_LineHL(uint8_t xH, uint8_t xL, uint8_t t){
     }
 }
 
+void GLCD_printxy(uint8_t x, uint8_t y, char cDat[]){
+    uint8_t i;
+    GLCD_COM(0xb0 | (0x0f & y));// set page address 0..5
+    GLCD_COM(0x10 | (x >> 4));  // column address upper 4bits
+    GLCD_COM(x & 0x0f);         // column address lower 4bits
+    for(x = 0; (x < 16) && ( cDat[x] != '\0'); x++){
+        for(i=0;i<8;i++){
+            GLCD_DAT(font[cDat[x] - ' '][i]);
+        }
+    }
+}
+
 void TMR1_int(){
     // when overflow 16bit counter TMR1
     overflowCounter++;
@@ -395,7 +408,8 @@ int main(void)
     for (i=0;i<128;i++){        // Test Gfx LCD
             GLCD_LineHL(i & 0x1f,(i & 0x1f)+16,i);
     }
-    __delay_ms(1000);   // Test Display 2sec
+    GLCD_printxy(12, 2, "HELLO WORLD !");
+    __delay_ms(2000);   // Test Display 2sec
     DisplayCurrentDateAndTime(currentTime, c0);
     __delay_ms(2000);   // Test Display 2sec
     LCD_clear();
@@ -489,6 +503,7 @@ int main(void)
                 GLCD_LineHL(prev_gx, gx, i);
                 prev_gx = gx;
             }
+            GLCD_printxy(0,5,c0);
         }
         
         if (pressedTime > 0){
