@@ -55,6 +55,7 @@
 #include <p24FJ64GC006.h>
 #include "mcc_generated_files/rtcc.h"
 #include "font_ascii.h"
+#include "font1216.h"
 #define LCD_ADR 0x3E    // I2C address of the character LCD
 
 // frequency counter
@@ -300,6 +301,26 @@ void GLCD_printxy(uint8_t x, uint8_t y, char cDat[]){
     }
 }
 
+void GLCD_print1216xy(uint8_t xin, uint8_t yin, char cDat[]){
+    uint8_t i,x;
+    GLCD_COM(0xb0 | (0x0f & yin));// set page address 0..4
+    GLCD_COM(0x10 | (xin >> 4));  // column address upper 4bits
+    GLCD_COM(xin & 0x0f);         // column address lower 4bits
+    for(x = 0; (x < 11) && ( cDat[x] != '\0'); x++){
+        for(i=0;i<12;i++){
+            GLCD_DAT( (uint8_t)((font1216[cDat[x] - ' '][i] & 0x00ff) ) );
+        }
+    }
+    GLCD_COM(0xb0 | ( 0x0f & (yin+1) ));// set page address 1..5
+    GLCD_COM(0x10 | (xin >> 4));  // column address upper 4bits
+    GLCD_COM(xin & 0x0f);         // column address lower 4bits
+    for(x = 0; (x < 11) && ( cDat[x] != '\0'); x++){
+        for(i=0;i<12;i++){
+            GLCD_DAT( (uint8_t)((font1216[cDat[x] - ' '][i]) >> 8) );
+        }
+    }
+}
+
 void TMR1_int(){
     // when overflow 16bit counter TMR1
     overflowCounter++;
@@ -348,6 +369,25 @@ void DisplayCurrentDateAndTime(bcdTime_t currentTime, char *c0){
             currentTime.tm_hour, currentTime.tm_min 
             );
     LCD_xy(0,1);LCD_str2(c0);
+}
+
+void DisplayCurrentTime2GLCD(bcdTime_t currentTime, char *c0){
+    RTCC_BCDTimeGet( &currentTime );
+    sprintf(c0, "%02x/%02x ", 
+            //currentTime.tm_year, 
+            currentTime.tm_mon, 
+            currentTime.tm_mday //, currentTime.tm_wday
+            //currentTime.tm_hour, currentTime.tm_min 
+            );
+    //LCD_xy(0,1);LCD_str2(c0);
+    GLCD_print1216xy(0,0,c0);
+    sprintf(c0, "%02x:%02x", 
+            //currentTime.tm_year, currentTime.tm_mon, 
+            //currentTime.tm_mday, //currentTime.tm_wday
+            currentTime.tm_hour, currentTime.tm_min 
+            );
+    //LCD_xy(0,1);LCD_str2(c0);
+    GLCD_print1216xy(68,0,c0);
 }
 
 void EX_INT0_CallBack(){
@@ -408,8 +448,14 @@ int main(void)
     for (i=0;i<128;i++){        // Test Gfx LCD
             GLCD_LineHL(i & 0x1f,(i & 0x1f)+16,i);
     }
-    GLCD_printxy(12, 2, "HELLO WORLD !");
     __delay_ms(2000);   // Test Display 2sec
+    //GLCD_printxy(12, 2, "HELLO WORLD !");
+    GLCD_print1216xy(0,0,"           ");    //clear GLCD
+    GLCD_print1216xy(0,4,"           ");    //clear GLCD
+    GLCD_print1216xy(0,1,"  HELLO    ");
+    GLCD_print1216xy(0,3,"   WORLD!  ");
+    //DisplayCurrentTime2GLCD(currentTime, c0); //for test
+    //__delay_ms(20000);   // Test Display 2sec
     DisplayCurrentDateAndTime(currentTime, c0);
     __delay_ms(2000);   // Test Display 2sec
     LCD_clear();
@@ -616,6 +662,7 @@ int main(void)
         //PORTGbits.RG2 = ~PORTGbits.RG2; //for test
         if (ModeVal == 10){
             DisplayCurrentDateAndTime(currentTime, c0);
+            DisplayCurrentTime2GLCD(currentTime, c0); //for test
             __delay_ms(5000);   // Test Display 5sec
             PORTEbits.RE0 = 0;          // Turn off LEFT-UP blue LED
             LCD_clear();
