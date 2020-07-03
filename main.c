@@ -549,7 +549,13 @@ int main(void)
                 GLCD_LineHL(prev_gx, gx, i);
                 prev_gx = gx;
             }
-            GLCD_printxy(0,5,c0);
+            if (ModeVal == 1){
+                //GLCD_printxy(0,5,c0);
+                sprintf(c0, "F             Hz",  UDAT.dat32);
+                GLCD_printxy(0,5,c0);
+                sprintf(c0, "%8lu",  UDAT.dat32);
+                GLCD_print1216xy(16,4,c0);                
+            }
         }
         
         if (pressedTime > 0){
