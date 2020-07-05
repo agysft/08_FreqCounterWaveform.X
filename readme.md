@@ -11,5 +11,5 @@ BOM
 - Li-Ion Battery: 18650 x1
 - DCDC Converter: LTC3245EMSE
 - Rotary Encoder: EC12PLBOSDVF-D-25K-24-24C-31/0  
-__
+___  
 Thank You.
