@@ -549,13 +549,13 @@ int main(void)
                 GLCD_LineHL(prev_gx, gx, i);
                 prev_gx = gx;
             }
-            if (ModeVal == 1){
-                //GLCD_printxy(0,5,c0);
-                sprintf(c0, "F             Hz",  UDAT.dat32);
-                GLCD_printxy(0,5,c0);
-                sprintf(c0, "%8lu",  UDAT.dat32);
-                GLCD_print1216xy(16,4,c0);                
-            }
+//            if (ModeVal == 1){    /*Test Program for font*/
+//                //GLCD_printxy(0,5,c0);
+//                sprintf(c0, "F             Hz",  UDAT.dat32);
+//                GLCD_printxy(0,5,c0);
+//                sprintf(c0, "%8lu",  UDAT.dat32);
+//                GLCD_print1216xy(16,4,c0);                
+//            }
         }
         
         if (pressedTime > 0){
@@ -633,7 +633,7 @@ int main(void)
         if (ModeVal == 3){
             if (rotDir != 0){
                 if (rotVal > 29) rotVal = 29;
-                if (rotVal <= 3) rotVal = 3;
+                if (rotVal <= 0) rotVal = 0;
                 DAC2DAT = (uint16_t)(rotVal*35);
                 sprintf(c0, "   L %3d",(int)rotVal); LCD_xy(8,1);LCD_str2(c0);
             }
