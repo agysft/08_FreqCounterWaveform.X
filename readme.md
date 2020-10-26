@@ -1,6 +1,7 @@
 # Frequency Counter with Waveform Display
 Frequency Counter: 48MHz and more  
 Waveform Display: max 250ns/sample  
+Input impedance: 1MΩ  
 ![](screenshot.JPG)
 MPLAB X v5.25, XC15 v1.36b, PIC24 - 1.145.0
 
