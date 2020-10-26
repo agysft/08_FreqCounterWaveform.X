@@ -13,15 +13,15 @@
   @Description:
     This header file provides implementations for driver APIs for all modules selected in the GUI.
     Generation Information :
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.145.0
+        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.168.0
         Device            :  PIC24FJ64GC006
     The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.36b
-        MPLAB             :  MPLAB X v5.25
+        Compiler          :  XC16 v1.50
+        MPLAB             :  MPLAB X v5.40
 */
 
 /*
-    (c) 2019 Microchip Technology Inc. and its subsidiaries. You may use this
+    (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
     software and any derivatives exclusively with Microchip products.
 
     THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
@@ -70,5 +70,8 @@ void CLOCK_Initialize(void)
     PMD7 = 0x00;
     // CF no clock failure; NOSC PRIPLL; SOSCEN enabled; POSCEN disabled; CLKLOCK unlocked; OSWEN Switch is Complete; IOLOCK not-active; 
     __builtin_write_OSCCONH((uint8_t) (0x03));
-    __builtin_write_OSCCONL((uint8_t) (0x02));
+    __builtin_write_OSCCONL((uint8_t) (0x03));
+    // Wait for Clock switch to occur
+    while (OSCCONbits.OSWEN != 0);
+    while (OSCCONbits.LOCK != 1);
 }

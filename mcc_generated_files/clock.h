@@ -13,15 +13,15 @@
   @Description:
     This header file provides implementations for driver APIs for all modules selected in the GUI.
     Generation Information :
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.145.0
+        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.168.0
         Device            :  PIC24FJ64GC006
     The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.36b
-        MPLAB             :  MPLAB X v5.25
+        Compiler          :  XC16 v1.50
+        MPLAB             :  MPLAB X v5.40
 */
 
 /*
-    (c) 2019 Microchip Technology Inc. and its subsidiaries. You may use this
+    (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
     software and any derivatives exclusively with Microchip products.
 
     THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
@@ -45,6 +45,12 @@
 #ifndef CLOCK_H
 #define	CLOCK_H
 
+/**
+  Section: Included Files
+*/
+
+#include <stdbool.h>
+
 #ifndef _XTAL_FREQ
 #define _XTAL_FREQ  32000000UL
 #endif
@@ -66,6 +72,8 @@
     CLOCK_Initialize(void);
  */
 void CLOCK_Initialize(void);
+
+
 #endif	/* CLOCK_H */
 /**
  End of File

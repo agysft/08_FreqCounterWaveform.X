@@ -15,15 +15,15 @@
   @Description:
     This source file provides implementations for PIN MANAGER.
     Generation Information :
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.145.0
+        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.168.0
         Device            :  PIC24FJ64GC006
     The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.36b
-        MPLAB 	          :  MPLAB X v5.25
+        Compiler          :  XC16 v1.50
+        MPLAB 	          :  MPLAB X v5.40
 */
 
 /*
-    (c) 2019 Microchip Technology Inc. and its subsidiaries. You may use this
+    (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
     software and any derivatives exclusively with Microchip products.
 
     THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
@@ -52,10 +52,6 @@
 #include <xc.h>
 #include <stdio.h>
 #include "pin_manager.h"
-
-/**
- Section: File specific functions
-*/
 
 /**
  Section: Driver Interface Function Definitions
@@ -116,21 +112,19 @@ void PIN_MANAGER_Initialize (void)
     ANSE = 0x00F0;
     ANSF = 0x00B0;
     ANSG = 0x03C0;
-
+    
     //Setting UTRDIS bit to use RG2 and RG3 as GPIO 
     U1CNFG2bits.UTRDIS = 1;
-
+    
     /****************************************************************************
      * Set the PPS
      ***************************************************************************/
     __builtin_write_OSCCONL(OSCCON & 0xbf); // unlock PPS
 
+    RPOR12bits.RP24R = 0x0008;    //RD1->SPI1:SCK1OUT
     RPOR11bits.RP23R = 0x0007;    //RD2->SPI1:SDO1
     RPINR0bits.INT1R = 0x0010;    //RF3->EXT_INT:INT1
-    RPOR12bits.RP24R = 0x0008;    //RD1->SPI1:SCK1OUT
 
     __builtin_write_OSCCONL(OSCCON | 0x40); // lock PPS
-
 }
-
 

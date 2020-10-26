@@ -13,15 +13,15 @@
   @Description:
     This header file provides APIs for driver for EXT_INT. 
     Generation Information : 
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.145.0
+        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.168.0
         Device            :  PIC24FJ64GC006
     The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.36b
-        MPLAB             :  MPLAB X v5.25
+        Compiler          :  XC16 v1.50
+        MPLAB             :  MPLAB X v5.40
 */
 
 /*
-    (c) 2019 Microchip Technology Inc. and its subsidiaries. You may use this
+    (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
     software and any derivatives exclusively with Microchip products.
 
     THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER

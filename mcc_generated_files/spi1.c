@@ -14,15 +14,15 @@
   @Description
     This source file provides APIs for driver for SPI1.
     Generation Information :
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.145.0
+        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.168.0
         Device            :  PIC24FJ64GC006
     The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.36b
-        MPLAB             :  MPLAB X v5.25
+        Compiler          :  XC16 v1.50
+        MPLAB             :  MPLAB X v5.40
 */
 
 /*
-    (c) 2019 Microchip Technology Inc. and its subsidiaries. You may use this
+    (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
     software and any derivatives exclusively with Microchip products.
 
     THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
@@ -64,8 +64,8 @@ uint16_t SPI1_ExchangeBuffer(uint8_t *pTransmitData, uint16_t byteCount, uint8_t
 
 void SPI1_Initialize (void)
 {
-    // MSTEN Master; DISSDO disabled; PPRE 1:1; SPRE 2:1; MODE16 disabled; SMP Middle; DISSCK disabled; CKP Idle:High, Active:Low; CKE Idle to Active; SSEN disabled; 
-    SPI1CON1 = 0x7B;
+    // MSTEN Master; DISSDO disabled; PPRE 1:1; SPRE 1:1; MODE16 disabled; SMP Middle; DISSCK disabled; CKP Idle:High, Active:Low; CKE Idle to Active; SSEN disabled; 
+    SPI1CON1 = 0x7F;
     // SPIFSD disabled; SPIBEN enabled; FRMPOL disabled; FRMDLY disabled; FRMEN disabled; 
     SPI1CON2 = 0x01;
     // SISEL SPI_INT_SPIRBF; SPIROV disabled; SPIEN enabled; SRXMPT disabled; SPISIDL disabled; SPIBEC disabled; 

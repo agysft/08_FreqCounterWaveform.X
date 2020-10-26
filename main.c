@@ -13,15 +13,15 @@
   @Description
     This source file provides main entry point for system initialization and application code development.
     Generation Information :
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.145.0
+        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.168.0
         Device            :  PIC24FJ64GC006
     The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.36b
-        MPLAB 	          :  MPLAB X v5.25
+        Compiler          :  XC16 v1.50
+        MPLAB 	          :  MPLAB X v5.40
 */
 
 /*
-    (c) 2019 Microchip Technology Inc. and its subsidiaries. You may use this
+    (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
     software and any derivatives exclusively with Microchip products.
 
     THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
@@ -542,6 +542,7 @@ int main(void)
             for (i=0;i<128;i++){
                 byteWavedata[i] = originalWavedata[i+t0] / 86;    //0..4095 -> 0..47
             }
+            // Scale Display
             prev_gx = byteWavedata[0];
             for (i=0;i<128;i++){
                 gx = byteWavedata[i];

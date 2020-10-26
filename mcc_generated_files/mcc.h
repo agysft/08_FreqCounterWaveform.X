@@ -11,17 +11,17 @@
     This is the mcc.h file generated using PIC24 / dsPIC33 / PIC32MM MCUs
 
   @Description:
-    This header file provides implementations for driver APIs for all modules selected in the GUI.
+    This file will be removed in future MCC releases. Use system.h instead.
     Generation Information :
-        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.145.0
+        Product Revision  :  PIC24 / dsPIC33 / PIC32MM MCUs - 1.168.0
         Device            :  PIC24FJ64GC006
     The generated drivers are tested against the following:
-        Compiler          :  XC16 v1.36b
-        MPLAB             :  MPLAB X v5.25
+        Compiler          :  XC16 v1.50
+        MPLAB             :  MPLAB X v5.40
 */
 
 /*
-    (c) 2019 Microchip Technology Inc. and its subsidiaries. You may use this
+    (c) 2020 Microchip Technology Inc. and its subsidiaries. You may use this
     software and any derivatives exclusively with Microchip products.
 
     THIS SOFTWARE IS SUPPLIED BY MICROCHIP "AS IS". NO WARRANTIES, WHETHER
@@ -50,35 +50,20 @@
 #include "pin_manager.h"
 #include <stdint.h>
 #include <stdbool.h>
+
+#include "ext_int.h"
+#include "tmr3.h"
 #include "spi1.h"
-#include "padc1.h"
-#include "rtcc.h"
+#include "tmr2.h"
+#include "tmr1.h"
+#include "tmr5.h"
 #include "dac2.h"
+#include "rtcc.h"
 #include "interrupt_manager.h"
 #include "traps.h"
-#include "ext_int.h"
-#include "tmr5.h"
-#include "tmr3.h"
-#include "tmr1.h"
-#include "tmr2.h"
+#include "padc1.h"
 
-#ifndef _XTAL_FREQ
-#define _XTAL_FREQ  32000000UL
-#endif
-
-/**
- * @Param
-    none
- * @Returns
-    none
- * @Description
-    Initializes the oscillator to the default states configured in the
- *                  MCC GUI
- * @Example
-    OSCILLATOR_Initialize(void);
- */
-void OSCILLATOR_Initialize(void) __attribute__((deprecated ("\nThis will be removed in future MCC releases. \nUse CLOCK_Initialize (void) instead. ")));
-
+#warning "This file will be removed in future MCC releases. Use system.h instead."
 
 #endif	/* MCC_H */
 /**
