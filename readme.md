@@ -11,6 +11,7 @@ BOM
 - LCD SPI 128x48 graphics: AQM1248
 - Li-Ion Battery: 18650 x1
 - DCDC Converter: LTC3245EMSE
-- Rotary Encoder: EC12PLBOSDVF-D-25K-24-24C-31/0   
+- Rotary Encoder: EC12PLBOSDVF-D-25K-24-24C-31/0
+- RF AMP: 2SK241 and BGA420   
 ___   
 Thank You.
