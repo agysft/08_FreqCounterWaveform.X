@@ -1,8 +1,8 @@
 # macOS
 .DS_Store
 
-
 # MPLAB X project
+.generated_files/
 build/
 debug/
 dist/

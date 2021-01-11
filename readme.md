@@ -3,7 +3,10 @@ Frequency Counter: 48MHz and more
 Waveform Display: max 250ns/sample  
 Input impedance: 1MΩ  
 ![](screenshot.JPG)
-MPLAB X v5.35, XC16 v1.36b, PIC24 - 1.145.0
+MPLAB X v5.45, XC16 v1.50, PIC24 - 1.168.0
+
+instructables
+https://www.instructables.com/Frequency-Counter-With-Waveform-Display/
 
 BOM
 - PIC24FJ64GC006T-I/PT
