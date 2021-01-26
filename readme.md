@@ -5,7 +5,7 @@ Input impedance: 1MΩ
 ![](screenshot.JPG)
 MPLAB X v5.45, XC16 v1.50, PIC24 - 1.168.0
 
-instructables
+Schematics:  
 https://www.instructables.com/Frequency-Counter-With-Waveform-Display/
 
 BOM
